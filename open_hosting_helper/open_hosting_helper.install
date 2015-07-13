@@ -1,0 +1,53 @@
+<?php
+/**
+ * Implementation of hook_schema().
+ */
+function open_hosting_helper_schema() {
+  $schema['open_hosting_helper'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'client_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'site_package' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+      ),
+    ),
+    'indexes' => array(
+      'vid' => array('vid'),
+      'client_id' => array('client_id'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function open_hosting_helper_install() {
+  // Create tables.
+  drupal_install_schema('open_hosting_helper');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function open_hosting_helper_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('open_hosting_helper');
+}

@@ -1,0 +1,98 @@
+<?php
+/**
+ * Implementation of hook_form_alter()
+ */
+function open_hosting_helper_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'site_node_form') {
+    $form['site_options'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Site options'),
+      '#description' => t('Define options that will be passed to the site on install.'),
+    );
+    $form['site_options']['client_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Client ID'),
+      '#description' => t('Enter the Client ID'),
+      '#default_value' => $form['#node']->client_id ? $form['#node']->client_id : NULL,
+      '#weight' => 0,
+    );
+
+    $site_packages = array(
+      'basic',
+      'advanced',
+      'custom',
+    );
+
+    $form['site_options']['site_package'] = array(
+      '#type' => 'select',
+      '#title' => t('Site Package'),
+      '#description' => t("Select a site package to enable on install"),
+      '#default_value' => $form['#node']->site_package ? $form['#node']->site_package : 'express',
+      '#options' => drupal_map_assoc($site_packages),
+    );
+
+    return $form;
+  }
+}
+/**
+ * Implementation of hook_insert()
+ */
+function open_hosting_helper_insert($node) {
+  if ($node->client_id) {
+
+    db_query("INSERT INTO {open_hosting_helper} (vid, nid, client_id, site_package) VALUES (%d, %d, '%s', '%s')", $node->vid, $node->nid, $node->client_id, $node->site_package);
+  }
+}
+/**
+ * Implementation of hook_update()
+ */
+function open_hosting_helper_update($node) {
+  db_query("UPDATE {open_hosting_helper} SET client_id = '%s', site_package = '%s' WHERE nid = %d", $node->client_id, $node->site_package, $node->nid);
+}
+/**
+ * Implementation of hook_delete()
+ */
+function open_hosting_helper_delete($node) {
+  db_query("DELETE FROM {open_hosting_helper} WHERE nid=%d", $node->nid);
+}
+/**
+ * Implementation of hook_delete_revision()
+ */
+function open_hosting_helper_delete_revision($node) {
+  db_query("DELETE FROM {open_hosting_helper} WHERE vid=%d", $node->vid);
+}
+/**
+ * Implementation of hook_nodeapi()
+ */
+function open_hosting_helper_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type == 'site') {
+    switch ($op) {
+      case 'insert':
+        open_hosting_helper_insert($node);
+        break;
+      case 'update':
+        open_hosting_helper_update($node);
+        break;
+      case 'delete' :
+        open_hosting_helper_delete($node);
+        break;
+      case 'delete revision':
+        open_hosting_helper_delete_revision($node);
+        break;
+      case 'validate' :
+        if (!$node->client_id) {
+          form_set_error('client_id', t('You must enter a Dealer ID!'));
+        }
+        break;
+      case 'load':
+        $result = db_query("SELECT * FROM {open_hosting_helper} WHERE vid=%d", $node->vid);
+        while ($row = db_fetch_array($result)) {
+          $additions['client_id'] = $row['client_id'];
+          $additions['site_package'] = $row['site_package'];
+        }
+
+        return $additions;
+        break;
+    }
+  }
+}

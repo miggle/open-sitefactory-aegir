@@ -1,0 +1,5 @@
+name = Open Hosting Helper
+description = Hosting helper module for Aegir customisations.
+package = Hosting
+dependencies[] = hosting_site
+core = 6.x
